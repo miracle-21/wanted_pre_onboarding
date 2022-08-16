@@ -34,22 +34,22 @@ class SignUpView(View):
                 password = hashed_password.decode('utf-8')
             )
 
-            return JsonResponse({'message' :'Registration Success'}, status = 201)
+            return JsonResponse({'message' :'Registration Complite'}, status = 201)
         except ValidationError as error:
             return JsonResponse({'message' : error.message}, status = 400)
 
 class SignInView(View):
-    def post(self, request):
+    def get(self, request):
         try:
             data = json.loads(request.body)
             company = Company.objects.get(name=data['name'])
 
             if not bcrypt.checkpw(data['password'].encode('utf-8'), company.password.encode('utf-8')):
-                return JsonResponse({'message' : 'INVALID_USER'}, status = 401)
+                return JsonResponse({'message' : 'Invalid Company'}, status = 401)
 
             access_token = jwt.encode({"id" : company.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
 
-            return JsonResponse({'access_token' : access_token}, status = 200)
+            return JsonResponse({'message' : 'Login Complete'}, headers = {'access_token' : access_token}, status = 200)
             
         except Company.DoesNotExist:
             return JsonResponse({'message' : 'Invalid Company'}, status = 401)
