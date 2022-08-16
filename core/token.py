@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from companies.models import Company
 from wanted.settings import SECRET_KEY, ALGORITHM
 
-def token_decorator(func):
+def token_company(func):
     def wrapper(self, request, *args, **kwargs):
         try:
             access_token = request.headers.get('Authorization', None)
