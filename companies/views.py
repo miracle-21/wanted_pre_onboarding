@@ -68,16 +68,22 @@ class CreateView(View):
         compensation = data['compensation']
         skill = data['skill']
 
-        Announcement.objects.create(
-            company_id = Company.objects.get(name=company).id,
-            title = title,
-            content = content,
-            position = position,
-            compensation = compensation,
-            skill = skill
-        )
+        access_token = jwt.encode({"id" : Company.objects.get(name=company).id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
 
-        return JsonResponse({'message' : 'Create Announcement'}, status = 201)
+        if request.headers.get('Authorization') == access_token:
+            Announcement.objects.create(
+                company_id = Company.objects.get(name=company).id,
+                title = title,
+                content = content,
+                position = position,
+                compensation = compensation,
+                skill = skill
+            )
+
+            return JsonResponse({'message' : 'Create Announcement'}, status = 201)
+        else:
+            return JsonResponse({'message' : 'Invalid Company'}, status = 401)
+
 
 class GetView(View):
     @token_company
@@ -103,22 +109,3 @@ class GetView(View):
             } for announcement in announcements
         ]
         return JsonResponse({'results' : results}, status = 200)
-
-
-        # title = request.body.get('title')
-        # content = request.body.get('content')
-        # position = request.body.get('position')
-        # compensation = request.body.get('compensation')
-        # skill = request.body.get('skill')
-
-        # a.title = title
-        # a.content = content
-        # a.position = position
-        # a.compensation = compensation
-        # a.skill = skill
-
-        # a.save()
-
-        # return JsonResponse({'message' : 'Update Announcement'}, status = 201)
-
-
