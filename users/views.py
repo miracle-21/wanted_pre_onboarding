@@ -8,7 +8,9 @@ from django.views import View
 from django.conf import settings
 
 from core.validation import validate_email, validate_password
-from users.models    import User
+from core.token import token_user
+from users.models    import User, Apply
+from companies.models import Announcement
 
 class SignUpView(View):
     def post(self, request):
@@ -52,3 +54,21 @@ class SignInView(View):
 
         except User.DoesNotExist:
             return JsonResponse({'message' : 'Invalid User'}, status = 401)
+
+class UserView(View):
+    @token_user
+    def post(self, request, announcement_id):
+        try:
+            announcement = Announcement.objects.get(id = announcement_id)
+            user = request.user
+
+            apply, is_created = Apply.objects.get_or_create(announcement = announcement, user = user)
+
+            if not is_created:
+                apply.delete()
+                return JsonResponse({'message' : 'Apply Deleted'}, status = 204)
+
+            return JsonResponse({'message' : 'Apply'}, status = 201)
+
+        except Announcement.DoesNotExist:
+            return JsonResponse({'message' :'Invalid Announcement'}, status = 401)
