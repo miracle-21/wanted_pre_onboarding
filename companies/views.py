@@ -152,3 +152,20 @@ class UpdateView(View):
                 return JsonResponse({'message' : 'Invalid Company'}, status = 401)
         except Announcement.DoesNotExist:
             return JsonResponse({'message' : 'Invalid Announcement'}, status = 401)
+
+class DetailView(View):
+    def get(self, request):
+        results = [
+            {
+                'announcement_id' : announcement.id,
+                'company' : announcement.company.name,
+                'title' : announcement.title,
+                'content' : announcement.content,
+                'position' : announcement.position,
+                'compensation' : int(announcement.compensation),
+                'skill' : announcement.skill,
+                'other announcement_id' : [i.id for i in Announcement.objects.filter(company_id=announcement.company.id)]
+
+            } for announcement in Announcement.objects.all()
+        ]
+        return JsonResponse({'results' : results}, status = 200)
