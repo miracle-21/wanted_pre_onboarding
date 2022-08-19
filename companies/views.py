@@ -86,14 +86,13 @@ class CreateView(View):
 
 
 class GetView(View):
-    @token_company
     def get(self, request):
         search = request.GET.get('search')
 
         q = Q()
 
         if search:
-            q &= (Q(company__name__contains = search) | Q(position__contains = search) | Q(skill__contains = search))
+            q &= Q(company__name__contains = search) | Q(position__contains = search) | Q(skill__contains = search)
 
         announcements = Announcement.objects.filter(q)
 
@@ -109,3 +108,47 @@ class GetView(View):
             } for announcement in announcements
         ]
         return JsonResponse({'results' : results}, status = 200)
+
+class DeleteView(View):
+    @token_company
+    def delete(self, request, announcement_id):
+        try:
+            access_token = jwt.encode({"id" : Announcement.objects.get(id=announcement_id).company_id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+
+            if request.headers.get('Authorization') == access_token:
+                Announcement.objects.get(id = announcement_id).delete()
+
+                return JsonResponse({'message' : 'Delete Complite'}, status = 200)
+            else:
+                return JsonResponse({'message' : 'Invalid Company'}, status = 401)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'message' : 'Invalid Announcement'}, status = 401)
+
+class UpdateView(View):
+    @token_company
+    def patch(self, request, announcement_id):
+        try:
+            access_token = jwt.encode({"id" : Announcement.objects.get(id=announcement_id).company_id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+
+            if request.headers.get('Authorization') == access_token:
+                data = json.loads(request.body) 
+                announcement = Announcement.objects.get(id = announcement_id)
+
+                if 'title' in data.keys():
+                    announcement.title = data['title']
+                if 'content' in data.keys():
+                    announcement.content = data['content']
+                if 'position' in data.keys():
+                    announcement.position = data['position']
+                if 'compensation' in data.keys():
+                    announcement.compensation = data['compensation']
+                if 'skill' in data.keys():
+                    announcement.skill = data['skill']
+                
+                announcement.save()
+
+                return JsonResponse({'message' : 'Update Complite'}, status = 200)
+            else:
+                return JsonResponse({'message' : 'Invalid Company'}, status = 401)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'message' : 'Invalid Announcement'}, status = 401)
