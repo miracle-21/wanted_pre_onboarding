@@ -59,31 +59,25 @@ class SignInView(View):
 class CreateView(View):
     @token_company
     def post(self, request):
+
         data = json.loads(request.body)
 
-        company = data['company']
         title = data['title']
         content = data['content']
         position = data['position']
         compensation = data['compensation']
         skill = data['skill']
 
-        access_token = jwt.encode({"id" : Company.objects.get(name=company).id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+        Announcement.objects.create(
+            company_id = request.company.id,
+            title = title,
+            content = content,
+            position = position,
+            compensation = compensation,
+            skill = skill
+        )
 
-        if request.headers.get('Authorization') == access_token:
-            Announcement.objects.create(
-                company_id = Company.objects.get(name=company).id,
-                title = title,
-                content = content,
-                position = position,
-                compensation = compensation,
-                skill = skill
-            )
-
-            return JsonResponse({'message' : 'Create Announcement'}, status = 201)
-        else:
-            return JsonResponse({'message' : 'Invalid Company'}, status = 401)
-
+        return JsonResponse({'message' : 'Create Announcement'}, status = 201)
 
 class GetView(View):
     def get(self, request):
@@ -113,24 +107,24 @@ class DeleteView(View):
     @token_company
     def delete(self, request, announcement_id):
         try:
-            access_token = jwt.encode({"id" : Announcement.objects.get(id=announcement_id).company_id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
-
-            if request.headers.get('Authorization') == access_token:
-                Announcement.objects.get(id = announcement_id).delete()
+            announcement = Announcement.objects.get(id=announcement_id)
+            if announcement.company_id == request.company.id:
+                announcement.delete()
 
                 return JsonResponse({'message' : 'Delete Complite'}, status = 200)
             else:
                 return JsonResponse({'message' : 'Invalid Company'}, status = 401)
         except Announcement.DoesNotExist:
             return JsonResponse({'message' : 'Invalid Announcement'}, status = 401)
+       
 
 class UpdateView(View):
     @token_company
     def patch(self, request, announcement_id):
         try:
-            access_token = jwt.encode({"id" : Announcement.objects.get(id=announcement_id).company_id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
-
-            if request.headers.get('Authorization') == access_token:
+            announcement = Announcement.objects.get(id=announcement_id)
+            
+            if announcement.company_id == request.company.id:
                 data = json.loads(request.body) 
                 announcement = Announcement.objects.get(id = announcement_id)
 
