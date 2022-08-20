@@ -111,5 +111,5 @@
 - 로그인을 후 채용 공고 지원 가능.
 - 이미 지원한 상태에 다시 지원하면 삭제가 됨.
 
-## 💻 AIP 명세서: Postman
+## 💻 API 명세서: Postman
 https://documenter.getpostman.com/view/18832289/VUqoSKEp
